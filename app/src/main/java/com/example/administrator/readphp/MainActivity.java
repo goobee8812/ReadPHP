@@ -9,8 +9,10 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
+import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
 
 import org.json.JSONArray;
@@ -21,7 +23,10 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+    public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
+    private OkHttpClient client = new OkHttpClient();
     private Button getData = null;
+    private Button postData = null;
     private TextView machineShow = null;
     private TextView ad1Show = null;
     private TextView ad2Show = null;
@@ -41,6 +46,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private String ad6;
     private String date;
 
+    private final String url = "http://120.76.114.183:666/readS.php";
+    private final String json = "{ \"firstName\": \"Brett\" }";
     Timer timer ;
     TimerTask task = new TimerTask() {
         @Override
@@ -75,16 +82,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         ad5Show = (TextView)findViewById(R.id.ad5Tv);
         ad6Show = (TextView)findViewById(R.id.ad6Tv);
         dateShow = (TextView)findViewById(R.id.dateTv);
+        postData = (Button)findViewById(R.id.postBtn);
         getData = (Button)findViewById(R.id.getBtn);
         getData.setOnClickListener(this);
+        postData.setOnClickListener(this);
         timer  = new Timer();
         timer.schedule(task,0,5000);
     }
 
     @Override
     public void onClick(View view) {
-        if(view.getId() == R.id.getBtn){
-            sendRequestWithOkHttp();
+//        if(view.getId() == R.id.getBtn){
+//            sendRequestWithOkHttp();
+//        }
+        switch (view.getId()){
+            case R.id.getBtn:
+                sendRequestWithOkHttp();
+                break;
+            case R.id.postBtn:
+                postRequestWithOkHttp(url,json);
+                Log.d("TAG", "onClick: POST json");
+                break;
+            default:
+                break;
         }
     }
 
@@ -93,7 +113,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void run() {
                 try {
-                    OkHttpClient client = new OkHttpClient();
                     Request request = new Request.Builder()
                             .url("http://120.76.114.183:666/readS.php") //指定访问的服务器地址是电脑本机
                             .build();
@@ -109,6 +128,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }).start();
     }
 
+    private void postRequestWithOkHttp(final String url, final String json){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                RequestBody body = RequestBody.create(JSON,json);
+                Request request = new Request.Builder()
+                        .url(url)
+                        .post(body)
+                        .build();
+                try {
+                    Response response = client.newCall(request).execute();
+                    Log.d("TAG", "POST!");
+                    if (response.isSuccessful()) {
+                        Log.d("TAG", response.body().string());
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+    }
 
 
     private void parseJSONWithGSON(String jsonData) {
