@@ -109,7 +109,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }).start();
     }
 
-    
+
 
     private void parseJSONWithGSON(String jsonData) {
         try{
